@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+/*.csv
+*.csv
+*.log
+*.png
+/ForexTest/cTable
+/ForexTest/cTable1200
+/ForexTest/cTable1200_allEuroSymbols
+/ForexTest/cTable1200_allSymbols
+/ForexTest/cTable_latest

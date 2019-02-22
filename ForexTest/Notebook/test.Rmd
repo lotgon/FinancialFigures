@@ -1,0 +1,55 @@
+---
+title: "Figure research journal"
+output:
+  html_document:
+    df_print: paged
+---
+
+### 1. Analyse model - trade treshold (0.006, 0.009, 0.011). Model makes a trade if all figures are worse than current price. Trade Step 100, 350, 700.
+Cluster period 2012 - 2017, Test period 2018. Cluster = 100, predicted window = 2300, window = 3000 of M15 bars
+```{r setup}
+knitr::opts_knit$set(root.dir = file.path(rprojroot::find_rstudio_root_file(), "ForexTest"))
+library(data.table)
+
+```
+
+```{r}
+source("Estimator.R")
+source("DownloadQuotes.R")
+main <- function(ss="EURUSD,GBPUSD,AUDUSD,USDJPY,USDCAD,USDCNH,USDRUB,NZDUSD,USDCHF,AUDCAD,AUDCHF,AUDJPY,AUDNZD,CADJPY,CHFJPY,EURAUD,EURCAD,EURCHF,EURGBP,EURJPY,EURNZD,GBPAUD,GBPCHF,GBPJPY,NZDJPY,USDDKK,USDHKD,USDMXN,USDNOK,USDPLN,USDSEK,USDSGD,USDTRY,EURDKK,EURHKD,EURNOK,EURPLN,EURSEK,EURTRY,GBPCAD,GBPNZD,GBPSGD,CADCHF,HKDJPY,NOKJPY,NOKSEK,NZDCAD,NZDCHF,NZDSGD,SGDJPY,XAUUSD,XAGUSD"){
+  symbols <- sort(strsplit(ss, ",")[[1]])
+  profits <- data.table()
+  for(tradeStep_ in c(100, 350, 700))
+    for(tradeThreshold_ in c(0.005, 0.006, 0.007))
+      profits <- rbind(profits, rbindlist(lapply(symbols, SimulateTrades, tradeStep=tradeStep_, tradeThreshold=tradeThreshold_, cTableName="cTable1200", from=ISOdate(2017, 1, 1, tz = "UTC"), to=ISOdate(2017, 04, 1, tz = "UTC"))))
+  profits
+}
+r <- main()
+#t3 <- main("AUDUSD,EURJPY,GBPUSD,NZDUSD,USDNOK")
+#t4 <- main("GBPCHF,AUDCHF,GBPSGD,USDTRY")
+#t3[tradeStep==100 & symbol %in% symbols,100000*sum(value), by=.(symbol, tradeThreshold)]
+
+#r2 <- readRDS("./Notebook/result2")
+r[, t.test(value, alternative="g")$p.value,by=.(symbol, tradeStep, tradeThreshold)][order(symbol)][V1<0.05][,.N, by=symbol][order(-N)]
+```
+Maximum value  is 9. 
+This result for all trade steps. If we can`t increase open position, trade step should be equal only 700
+```{r}
+r[tradeStep==100, t.test(value, alternative="g")$p.value,by=.(symbol, tradeStep, tradeThreshold)][order(symbol)][V1<0.05][,.N, by=symbol][order(-N)]
+```
+
+Idea to think - why trade Step is much better than 700.
+
+##3. Hypothesis. If we reverse trade, we should not find any positive parameters with 95%
+```{r}
+r[, t.test(value, alternative="l")$p.value,by=.(symbol, tradeStep, tradeThreshold)][order(symbol)][V1<0.05][,.N, by=symbol][order(-N)]
+
+```
+However, we found a lot of reversed positive symbol... Possible fatal error.. Mean profit is less than 0. It means symbol behaviour was reversed.
+
+Test for one example
+```{r}
+test1 <- r[symbol=="AUDUSD"]#main("AUDUSD")
+plot(cumsum(test1[tradeStep==100 &  symbol=="AUDUSD", value]))
+
+```

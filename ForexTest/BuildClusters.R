@@ -51,7 +51,7 @@ BuildCenterLines <- function(symbols, startDate, endDate, periodicity="M15", clu
 }
 
 #export data for mt5
-#ExportCSV2Mt5(NULL, "cTable1200_allSymbols")
+#ExportCSV2Mt5(NULL, "cTable1200_allEuroSymbols")
 ExportCSV2Mt5 <- function(chosenSymbol, cTableName = "cTable")
 {
   print(chosenSymbol)
